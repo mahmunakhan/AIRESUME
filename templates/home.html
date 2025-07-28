@@ -546,9 +546,10 @@
                         </button>
                         {% if session %}
 
-                        <button type="submit" formaction="{{ url_for('clear') }}" class="btn btn-outline">
+                        <button type="button" onclick="clearSession()" class="btn btn-outline">
                             <i class="fas fa-trash-alt"></i> Clear All
                         </button>
+
                         {% endif %}
                     </div>
                 </form>
@@ -632,110 +633,125 @@
        
     </div>
 
-    <script>
-        // Clear form and session data on refresh or browser load
-        window.onload = function () {
-            if (performance.navigation.type === 1 || performance.getEntriesByType("navigation")[0]?.type === "reload") {
-                document.querySelectorAll("form").forEach(form => form.reset());
-                sessionStorage.clear();
-                localStorage.clear();
-                window.location.href = "/?clear=1";
-
-            }
-        };
-
-        // Enhance file upload display
-        document.getElementById('resume').addEventListener('change', function(e) {
-            const fileName = e.target.files[0]?.name || 'No file selected';
-            const uploadLabel = document.querySelector('label[for="resume"] p:last-of-type');
-            if (uploadLabel) {
-                uploadLabel.textContent = `Selected: ${fileName}`;
-                uploadLabel.style.fontWeight = 'bold';
-                uploadLabel.style.color = 'var(--primary)';
-            }
-        });
-
-        document.getElementById('jd_file').addEventListener('change', function(e) {
-            const fileName = e.target.files[0]?.name || 'No file selected';
-            const jdUploadLabel = document.querySelector('label[for="jd_file"] p:last-of-type');
-            if (jdUploadLabel) {
-                jdUploadLabel.textContent = `Selected: ${fileName}`;
-                jdUploadLabel.style.fontWeight = 'bold';
-                jdUploadLabel.style.color = 'var(--primary)';
-            }
-        });
-
-        // Drag and drop functionality
-        const fileUploads = document.querySelectorAll('.file-upload');
-        fileUploads.forEach(upload => {
-            upload.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                upload.style.borderColor = 'var(--primary)';
-                upload.style.backgroundColor = '#f0f4ff';
-            });
-
-            upload.addEventListener('dragleave', () => {
-                upload.style.borderColor = '#ddd';
-                upload.style.backgroundColor = '#f9f9f9';
-            });
-
-            upload.addEventListener('drop', (e) => {
-                e.preventDefault();
-                upload.style.borderColor = '#ddd';
-                upload.style.backgroundColor = '#f9f9f9';
-
-                if (e.dataTransfer.files.length) {
-                    const fileInput = upload.querySelector('input[type="file"]');
-                    fileInput.files = e.dataTransfer.files;
-
-                    // Trigger change event
-                    const event = new Event('change');
-                    fileInput.dispatchEvent(event);
-                }
-            });
-        });
-
-        // Style recommendation and highlight candidate name
-        document.addEventListener('DOMContentLoaded', function() {
-            const recommendation = document.querySelector('.recommendation');
-            if (recommendation) {
-                const text = recommendation.textContent.toLowerCase();
-                if (text.includes('not fit') || text.includes('not a fit')) {
-                    recommendation.classList.add('not-fit');
-                } else if (text.includes('fit') || text.includes('strong candidate')) {
-                    recommendation.classList.add('fit');
-                }
-
-                // Highlight candidate name
-                const nameMatch = recommendation.textContent.match(/([A-Z][a-z]+(?: [A-Z][a-z]+)*),/);
-                if (nameMatch && nameMatch[1]) {
-                    const name = nameMatch[1];
-                    recommendation.innerHTML = recommendation.innerHTML.replace(
-                        new RegExp(name, 'g'),
-                        `<span class="candidate-name">${name}</span>`
-                    );
-                }
-            }
-
-            // Scroll to result if present
-            const evalSection = document.getElementById("evaluation-result");
-            const matchSection = document.getElementById("match-result");
-
-            if (evalSection) {
-                evalSection.scrollIntoView({ behavior: "smooth" });
-            } else if (matchSection) {
-                matchSection.scrollIntoView({ behavior: "smooth" });
-            }
-        });
-
-        // Scroll to form on job seeker card click
-        const jobSeekerBtn = document.querySelector('.job-seeker-card .btn');
-        if (jobSeekerBtn) {
-            jobSeekerBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                document.querySelector('form').scrollIntoView({ behavior: 'smooth' });
-            });
+<script>
+    // Clear form and session data on refresh or browser load
+    window.onload = function () {
+        if (performance.navigation.type === 1 || performance.getEntriesByType("navigation")[0]?.type === "reload") {
+            document.querySelectorAll("form").forEach(form => form.reset());
+            sessionStorage.clear();
+            localStorage.clear();
+            window.location.href = "/?clear=1";
         }
-    </script>
+    };
+
+    // Enhance file upload display
+    document.getElementById('resume').addEventListener('change', function(e) {
+        const fileName = e.target.files[0]?.name || 'No file selected';
+        const uploadLabel = document.querySelector('label[for="resume"] p:last-of-type');
+        if (uploadLabel) {
+            uploadLabel.textContent = `Selected: ${fileName}`;
+            uploadLabel.style.fontWeight = 'bold';
+            uploadLabel.style.color = 'var(--primary)';
+        }
+    });
+
+    document.getElementById('jd_file').addEventListener('change', function(e) {
+        const fileName = e.target.files[0]?.name || 'No file selected';
+        const jdUploadLabel = document.querySelector('label[for="jd_file"] p:last-of-type');
+        if (jdUploadLabel) {
+            jdUploadLabel.textContent = `Selected: ${fileName}`;
+            jdUploadLabel.style.fontWeight = 'bold';
+            jdUploadLabel.style.color = 'var(--primary)';
+        }
+    });
+
+    // Scroll to form on job seeker card click
+    const jobSeekerBtn = document.querySelector('.job-seeker-card .btn');
+    if (jobSeekerBtn) {
+        jobSeekerBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            document.querySelector('form').scrollIntoView({ behavior: 'smooth' });
+        });
+    }
+
+    // Clear session function for Clear All button
+    function clearSession() {
+        fetch("/clear", {
+            method: "POST"
+        })
+        .then(res => {
+            if (res.redirected) {
+                window.location.href = res.url;
+            } else {
+                window.location.reload(); // fallback
+            }
+        })
+        .catch(err => console.error("Clear session failed", err));
+    }
+
+    // Drag and drop functionality
+    const fileUploads = document.querySelectorAll('.file-upload');
+    fileUploads.forEach(upload => {
+        upload.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            upload.style.borderColor = 'var(--primary)';
+            upload.style.backgroundColor = '#f0f4ff';
+        });
+
+        upload.addEventListener('dragleave', () => {
+            upload.style.borderColor = '#ddd';
+            upload.style.backgroundColor = '#f9f9f9';
+        });
+
+        upload.addEventListener('drop', (e) => {
+            e.preventDefault();
+            upload.style.borderColor = '#ddd';
+            upload.style.backgroundColor = '#f9f9f9';
+
+            if (e.dataTransfer.files.length) {
+                const fileInput = upload.querySelector('input[type="file"]');
+                fileInput.files = e.dataTransfer.files;
+
+                // Trigger change event
+                const event = new Event('change');
+                fileInput.dispatchEvent(event);
+            }
+        });
+    });
+
+    // Style recommendation and highlight candidate name
+    document.addEventListener('DOMContentLoaded', function() {
+        const recommendation = document.querySelector('.recommendation');
+        if (recommendation) {
+            const text = recommendation.textContent.toLowerCase();
+            if (text.includes('not fit') || text.includes('not a fit')) {
+                recommendation.classList.add('not-fit');
+            } else if (text.includes('fit') || text.includes('strong candidate')) {
+                recommendation.classList.add('fit');
+            }
+
+            // Highlight candidate name
+            const nameMatch = recommendation.textContent.match(/([A-Z][a-z]+(?: [A-Z][a-z]+)*),/);
+            if (nameMatch && nameMatch[1]) {
+                const name = nameMatch[1];
+                recommendation.innerHTML = recommendation.innerHTML.replace(
+                    new RegExp(name, 'g'),
+                    `<span class="candidate-name">${name}</span>`
+                );
+            }
+        }
+
+        // Scroll to result if present
+        const evalSection = document.getElementById("evaluation-result");
+        const matchSection = document.getElementById("match-result");
+
+        if (evalSection) {
+            evalSection.scrollIntoView({ behavior: "smooth" });
+        } else if (matchSection) {
+            matchSection.scrollIntoView({ behavior: "smooth" });
+        }
+    });
+</script>
+
 </body>
 </html>
